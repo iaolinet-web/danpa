@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from 'react'
+import { useEffect, useState, useMemo, Fragment } from 'react'
 import { supabase } from '../services/supabase'
 
 const FILTROS_PAGO = ['todos', 'pagado', 'parcial', 'no_pagado']
@@ -286,8 +286,8 @@ export default function CobrosAdmin() {
                 const esUrgente = dias > 30 && p.estado_pago !== 'pagado'
 
                 return (
-                  <>
-                  <tr key={p.id} className="border-t transition-colors hover:bg-[var(--hover-subtle)]"
+                  <Fragment key={p.id}>
+                  <tr className="border-t transition-colors hover:bg-[var(--hover-subtle)]"
                     style={{ borderColor: esUrgente ? 'var(--danger)' : 'var(--border)', background: esUrgente ? 'var(--danger-bg)' : undefined }}>
                     <td className="px-5 py-3 text-xs tabular-nums" style={{ color: 'var(--ink-muted)' }}>{formatFecha(p.created_at)}</td>
                     <td className="px-5 py-3">
@@ -372,7 +372,7 @@ export default function CobrosAdmin() {
                       </td>
                     </tr>
                   )}
-                  </>
+                  </Fragment>
                 )
               })}
             </tbody>

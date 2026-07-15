@@ -47,8 +47,7 @@ export default function AdminDashboard() {
         .order('fecha', { ascending: false })
       if (error) throw error
       setMovimientos(data || [])
-    } catch (err) {
-      console.error('Error fetching movimientos:', err)
+    } catch {
       setMovimientos([])
     }
   }
@@ -75,8 +74,7 @@ export default function AdminDashboard() {
         if (pedError) throw pedError
         setPedidos(ped || [])
       }
-    } catch (err) {
-      console.error('Error fetching clientes:', err)
+    } catch {
       setClientes([])
       setPedidos([])
     }
@@ -89,8 +87,7 @@ export default function AdminDashboard() {
         .select('*')
       if (error) throw error
       setUsuarios(data || [])
-    } catch (err) {
-      console.error('Error fetching usuarios:', err)
+    } catch {
       setUsuarios([])
     }
   }
@@ -559,7 +556,7 @@ export default function AdminDashboard() {
                       </tr>
                     </thead>
                     <tbody>
-                      {metricasCorredores.map((c, i) => (
+                      {metricasCorredores.map((c) => (
                         <tr key={c.id} className="border-t" style={{ borderColor: 'var(--border)' }}>
                           <td className="px-5 py-3">
                             <div>

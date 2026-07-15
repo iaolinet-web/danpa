@@ -35,62 +35,58 @@ export default function App() {
     return () => subscription.unsubscribe()
   }, [])
 
-  if (loading) {
-    return (
-      <ThemeProvider>
+  return (
+    <ThemeProvider>
+      {loading ? (
         <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--bg)' }}>
           <div className="animate-spin rounded-full h-10 w-10 border-2" style={{ borderColor: 'var(--surface-2)', borderTopColor: 'var(--brand)' }} />
         </div>
-      </ThemeProvider>
-    )
-  }
-
-  if (!user) return <Login />
-
-  return (
-    <ThemeProvider>
-      <ProfileProvider>
-        <BrowserRouter>
-          <CartProvider>
-            <div className="min-h-screen" style={{ background: 'var(--bg)', color: 'var(--ink-primary)' }}>
-              <Navbar />
-              <main className="max-w-6xl mx-auto px-4 py-8">
-                <Routes>
-                  <Route path="/" element={<Catalogo />} />
-                  <Route path="/carrito" element={
-                    <ProtectedRoute permission="carrito"><Carrito /></ProtectedRoute>
-                  } />
-                  <Route path="/pedidos" element={
-                    <ProtectedRoute permission="pedidos"><Pedidos /></ProtectedRoute>
-                  } />
-                  <Route path="/clientes" element={
-                    <ProtectedRoute permission="clientes"><Clientes /></ProtectedRoute>
-                  } />
-                  <Route path="/clientes/:id" element={
-                    <ProtectedRoute permission="clientes"><ClienteDetalle /></ProtectedRoute>
-                  } />
-                  <Route path="/recorrida" element={
-                    <ProtectedRoute permission="recorrida"><Recorrida /></ProtectedRoute>
-                  } />
-                  <Route path="/admin/dashboard" element={
-                    <ProtectedRoute permission="adminDashboard"><AdminDashboard /></ProtectedRoute>
-                  } />
-                  <Route path="/admin/productos" element={
-                    <ProtectedRoute permission="adminProductos"><ProductosAdmin /></ProtectedRoute>
-                  } />
-                  <Route path="/admin/usuarios" element={
-                    <ProtectedRoute permission="adminUsuarios"><UsuariosAdmin /></ProtectedRoute>
-                  } />
-                  <Route path="/admin/cobros" element={
-                    <ProtectedRoute permission="adminCobros"><CobrosAdmin /></ProtectedRoute>
-                  } />
-                  <Route path="*" element={<Navigate to="/" replace />} />
-                </Routes>
-              </main>
-            </div>
-          </CartProvider>
-        </BrowserRouter>
-      </ProfileProvider>
+      ) : !user ? (
+        <Login />
+      ) : (
+        <ProfileProvider>
+          <BrowserRouter>
+            <CartProvider>
+              <div className="min-h-screen" style={{ background: 'var(--bg)', color: 'var(--ink-primary)' }}>
+                <Navbar />
+                <main className="max-w-6xl mx-auto px-4 py-8">
+                  <Routes>
+                    <Route path="/" element={<Catalogo />} />
+                    <Route path="/carrito" element={
+                      <ProtectedRoute permission="carrito"><Carrito /></ProtectedRoute>
+                    } />
+                    <Route path="/pedidos" element={
+                      <ProtectedRoute permission="pedidos"><Pedidos /></ProtectedRoute>
+                    } />
+                    <Route path="/clientes" element={
+                      <ProtectedRoute permission="clientes"><Clientes /></ProtectedRoute>
+                    } />
+                    <Route path="/clientes/:id" element={
+                      <ProtectedRoute permission="clientes"><ClienteDetalle /></ProtectedRoute>
+                    } />
+                    <Route path="/recorrida" element={
+                      <ProtectedRoute permission="recorrida"><Recorrida /></ProtectedRoute>
+                    } />
+                    <Route path="/admin/dashboard" element={
+                      <ProtectedRoute permission="adminDashboard"><AdminDashboard /></ProtectedRoute>
+                    } />
+                    <Route path="/admin/productos" element={
+                      <ProtectedRoute permission="adminProductos"><ProductosAdmin /></ProtectedRoute>
+                    } />
+                    <Route path="/admin/usuarios" element={
+                      <ProtectedRoute permission="adminUsuarios"><UsuariosAdmin /></ProtectedRoute>
+                    } />
+                    <Route path="/admin/cobros" element={
+                      <ProtectedRoute permission="adminCobros"><CobrosAdmin /></ProtectedRoute>
+                    } />
+                    <Route path="*" element={<Navigate to="/" replace />} />
+                  </Routes>
+                </main>
+              </div>
+            </CartProvider>
+          </BrowserRouter>
+        </ProfileProvider>
+      )}
     </ThemeProvider>
   )
 }

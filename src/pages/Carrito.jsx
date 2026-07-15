@@ -95,7 +95,7 @@ export default function Carrito() {
           Agregá productos desde el catálogo para armar tu pedido.
         </p>
         <Link
-          to="/catalogo"
+          to="/"
           className="inline-flex items-center gap-2 mt-6 px-6 py-3 bg-[var(--brand)] hover:bg-[var(--brand-hover)] text-white font-semibold text-[15px] rounded-lg transition-colors duration-150"
         >
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

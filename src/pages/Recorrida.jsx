@@ -72,7 +72,7 @@ export default function Recorrida() {
   const fetchData = async () => {
     setLoading(true)
     const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return
+    if (!user) { setLoading(false); return }
 
     const { data: cli } = await supabase
       .from('clientes')

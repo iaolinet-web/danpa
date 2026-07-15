@@ -70,7 +70,7 @@ export default function Catalogo() {
   )
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-8" style={{ background: 'var(--bg)', minHeight: '100vh' }}>
+    <div>
       {/* Search */}
       <div className="mb-8">
         <div className="relative">

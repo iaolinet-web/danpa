@@ -3,8 +3,6 @@ import { supabase } from '../services/supabase'
 
 const ProfileContext = createContext()
 
-const ADMIN_EMAIL = import.meta.env.VITE_ADMIN_EMAIL
-
 const PERMISOS = {
   admin:     { catalogo: true, carrito: true, clientes: true, pedidos: true, recorrida: true, adminProductos: true, adminUsuarios: true, adminDashboard: true, adminCobros: true },
   corredor:  { catalogo: true, carrito: true, clientes: true, pedidos: true, recorrida: true, adminProductos: false, adminUsuarios: false },
@@ -32,7 +30,6 @@ export function ProfileProvider({ children }) {
 
     const { data: authUser } = await supabase.auth.getUser()
     const email = authUser?.user?.email || ''
-    const esAdmin = email === ADMIN_EMAIL
 
     const { data, error: _fetchError } = await supabase
       .from('usuarios')
@@ -41,23 +38,21 @@ export function ProfileProvider({ children }) {
       .maybeSingle()
 
     if (!data) {
-      const perfilInicial = esAdmin ? 'admin' : 'corredor'
       const { error: insertError } = await supabase.from('usuarios').insert({
         id: userId,
         email,
         nombre: '',
-        perfil: perfilInicial,
+        perfil: 'corredor',
         activo: true,
       })
       if (insertError) {
-        console.error('[ProfileContext] INSERT FAILED:', insertError.message)
         setProfile({
           id: userId,
           email,
           nombre: '',
-          perfil: esAdmin ? 'admin' : 'corredor',
+          perfil: 'corredor',
           activo: true,
-          permisos: esAdmin ? PERMISOS.admin : PERMISOS.corredor,
+          permisos: PERMISOS.corredor,
         })
         setLoading(false)
         return
@@ -79,16 +74,12 @@ export function ProfileProvider({ children }) {
           id: userId,
           email,
           nombre: '',
-          perfil: esAdmin ? 'admin' : 'corredor',
+          perfil: 'corredor',
           activo: true,
-          permisos: esAdmin ? PERMISOS.admin : PERMISOS.corredor,
+          permisos: PERMISOS.corredor,
         })
       }
     } else {
-      if (esAdmin && data.perfil !== 'admin') {
-        await supabase.from('usuarios').update({ perfil: 'admin' }).eq('id', userId)
-        data.perfil = 'admin'
-      }
       setProfile({
         ...data,
         permisos: PERMISOS[data.perfil] || PERMISOS.consulta,

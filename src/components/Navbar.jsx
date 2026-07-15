@@ -42,6 +42,7 @@ export default function Navbar() {
   }
 
   const handleLogout = async () => {
+    localStorage.removeItem('danpa_cart')
     await supabase.auth.signOut()
   }
 
