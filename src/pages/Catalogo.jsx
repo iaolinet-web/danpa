@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { supabase } from '../services/supabase'
 import { useCart } from '../context/CartContext'
 
@@ -41,27 +41,40 @@ export default function Catalogo() {
   const [animando, setAnimando] = useState(null)
   const { addItem } = useCart()
 
+  const timerAnimando = useRef(null)
+  const timerAgregado = useRef(null)
+
   useEffect(() => {
+    let cancelled = false
+    const fetchProductos = async () => {
+      const { data } = await supabase
+        .from('productos')
+        .select('*')
+        .eq('activo', true)
+        .order('nombre')
+      if (!cancelled) {
+        setProductos(data || [])
+        setLoading(false)
+      }
+    }
     fetchProductos()
+    return () => { cancelled = true }
   }, [])
 
-  const fetchProductos = async () => {
-    const { data } = await supabase
-      .from('productos')
-      .select('*')
-      .eq('activo', true)
-      .order('nombre')
-    setProductos(data || [])
-    setLoading(false)
-  }
+  useEffect(() => {
+    return () => {
+      if (timerAnimando.current) clearTimeout(timerAnimando.current)
+      if (timerAgregado.current) clearTimeout(timerAgregado.current)
+    }
+  }, [])
 
   const handleAdd = (producto) => {
     setAnimando(producto.id)
-    setTimeout(() => setAnimando(null), 150)
+    timerAnimando.current = setTimeout(() => setAnimando(null), 150)
 
     addItem(producto)
     setAgregado(producto.id)
-    setTimeout(() => setAgregado(null), 1500)
+    timerAgregado.current = setTimeout(() => setAgregado(null), 1500)
   }
 
   const filtrados = productos.filter(p =>

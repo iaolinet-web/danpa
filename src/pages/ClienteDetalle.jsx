@@ -24,45 +24,52 @@ export default function ClienteDetalle() {
   const [showNotas, setShowNotas] = useState(false)
 
   useEffect(() => {
-    fetchData()
-  }, [id])
+    let cancelled = false
+    const load = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user || cancelled) return
 
-  const fetchData = async () => {
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return
+        const { data: cli } = await supabase
+          .from('clientes')
+          .select('*')
+          .eq('id', id)
+          .eq('corredor_id', user.id)
+          .single()
 
-    const { data: cli } = await supabase
-      .from('clientes')
-      .select('*')
-      .eq('id', id)
-      .eq('corredor_id', user.id)
-      .single()
+        if (!cli || cancelled) {
+          navigate('/clientes')
+          return
+        }
 
-    if (!cli) {
-      navigate('/clientes')
-      return
+        setCliente(cli)
+
+        const { data: ped } = await supabase
+          .from('pedidos')
+          .select('*')
+          .eq('cliente_id', id)
+          .eq('corredor_id', user.id)
+          .order('created_at', { ascending: false })
+
+        if (!cancelled) setPedidos(ped || [])
+
+        const { data: notasData } = await supabase
+          .from('cliente_notas')
+          .select('*')
+          .eq('cliente_id', id)
+          .order('created_at', { ascending: false })
+
+        if (!cancelled) {
+          setNotas(notasData || [])
+          setLoading(false)
+        }
+      } catch {
+        if (!cancelled) setLoading(false)
+      }
     }
-
-    setCliente(cli)
-
-    const { data: ped } = await supabase
-      .from('pedidos')
-      .select('*')
-      .eq('cliente_id', id)
-      .eq('corredor_id', user.id)
-      .order('created_at', { ascending: false })
-
-    setPedidos(ped || [])
-
-    const { data: notasData } = await supabase
-      .from('cliente_notas')
-      .select('*')
-      .eq('cliente_id', id)
-      .order('created_at', { ascending: false })
-
-    setNotas(notasData || [])
-    setLoading(false)
-  }
+    load()
+    return () => { cancelled = true }
+  }, [id, navigate])
 
   const fetchDetalle = async (pedidoId) => {
     if (detalles[pedidoId]) return
@@ -85,21 +92,25 @@ export default function ClienteDetalle() {
   const handleAddNota = async (e) => {
     e.preventDefault()
     if (!nuevaNota.trim()) return
-    const { data: { user } } = await supabase.auth.getUser()
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
 
-    await supabase.from('cliente_notas').insert({
-      cliente_id: id,
-      corredor_id: user.id,
-      nota: nuevaNota.trim(),
-    })
+      await supabase.from('cliente_notas').insert({
+        cliente_id: id,
+        corredor_id: user.id,
+        nota: nuevaNota.trim(),
+      })
 
-    setNuevaNota('')
-    const { data: notasData } = await supabase
-      .from('cliente_notas')
-      .select('*')
-      .eq('cliente_id', id)
-      .order('created_at', { ascending: false })
-    setNotas(notasData || [])
+      setNuevaNota('')
+      const { data: notasData } = await supabase
+        .from('cliente_notas')
+        .select('*')
+        .eq('cliente_id', id)
+        .order('created_at', { ascending: false })
+      setNotas(notasData || [])
+    } catch (err) {
+      alert('Error al agregar nota: ' + err.message)
+    }
   }
 
   const handleWhatsApp = () => {

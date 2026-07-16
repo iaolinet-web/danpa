@@ -38,7 +38,18 @@ export default function ProductosAdmin() {
     costo_adquisicion: '', costo_transporte: '', costo_empaque: '', costo_almacenaje: '', costo_comision: '', costo_otros: '',
   })
 
-  useEffect(() => { fetchProductos() }, [])
+  useEffect(() => {
+    let cancelled = false
+    const load = async () => {
+      const { data } = await supabase.from('productos').select('*').order('nombre')
+      if (!cancelled) {
+        setProductos(data || [])
+        setLoading(false)
+      }
+    }
+    load()
+    return () => { cancelled = true }
+  }, [])
 
   const fetchProductos = async () => {
     const { data } = await supabase.from('productos').select('*').order('nombre')

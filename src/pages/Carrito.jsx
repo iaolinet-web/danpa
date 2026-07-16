@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useCart } from '../context/CartContext'
 import { supabase } from '../services/supabase'
@@ -14,19 +14,33 @@ export default function Carrito() {
   const [error, setError] = useState('')
   const [cargandoClientes, setCargandoClientes] = useState(true)
 
+  const timerExito = useRef(null)
+
   useEffect(() => {
+    let cancelled = false
     const cargarClientes = async () => {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) return
-      const { data } = await supabase
-        .from('clientes')
-        .select('id, nombre')
-        .eq('corredor_id', user.id)
-        .order('nombre')
-      setClientes(data || [])
-      setCargandoClientes(false)
+      try {
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) return
+        const { data } = await supabase
+          .from('clientes')
+          .select('id, nombre')
+          .eq('corredor_id', user.id)
+          .order('nombre')
+        if (!cancelled) {
+          setClientes(data || [])
+          setCargandoClientes(false)
+        }
+      } catch {
+        if (!cancelled) setCargandoClientes(false)
+      }
     }
     cargarClientes()
+    return () => { cancelled = true }
+  }, [])
+
+  useEffect(() => {
+    return () => { if (timerExito.current) clearTimeout(timerExito.current) }
   }, [])
 
   const handleConfirmar = async () => {
@@ -71,7 +85,7 @@ export default function Carrito() {
       setNotas('')
       setExito(true)
       setLoading(false)
-      setTimeout(() => { setExito(false); navigate('/pedidos') }, 2000)
+      timerExito.current = setTimeout(() => { setExito(false); navigate('/pedidos') }, 2000)
     } catch (err) {
       setError(err.message)
       setLoading(false)

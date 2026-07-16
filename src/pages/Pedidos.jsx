@@ -59,19 +59,24 @@ export default function Pedidos() {
     monto_pagado: '', tipo_pago: 'efectivo', referencia_pago: '', fecha_pago: fechaLocal()
   })
 
-  useEffect(() => { fetchPedidos() }, [])
-
-  const fetchPedidos = async () => {
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return
-    const { data } = await supabase
-      .from('pedidos')
-      .select('*, clientes(nombre, telefono)')
-      .eq('corredor_id', user.id)
-      .order('created_at', { ascending: false })
-    setPedidos(data || [])
-    setLoading(false)
-  }
+  useEffect(() => {
+    let cancelled = false
+    const load = async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user || cancelled) return
+      const { data } = await supabase
+        .from('pedidos')
+        .select('*, clientes(nombre, telefono)')
+        .eq('corredor_id', user.id)
+        .order('created_at', { ascending: false })
+      if (!cancelled) {
+        setPedidos(data || [])
+        setLoading(false)
+      }
+    }
+    load()
+    return () => { cancelled = true }
+  }, [])
 
   const fetchDetalle = async (pedidoId) => {
     if (detalles[pedidoId]) return

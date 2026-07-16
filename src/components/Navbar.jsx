@@ -42,8 +42,12 @@ export default function Navbar() {
   }
 
   const handleLogout = async () => {
-    localStorage.removeItem('danpa_cart')
-    await supabase.auth.signOut()
+    try {
+      localStorage.removeItem('danpa_cart')
+      await supabase.auth.signOut()
+    } catch (err) {
+      console.error('Error during logout:', err.message)
+    }
   }
 
   return (

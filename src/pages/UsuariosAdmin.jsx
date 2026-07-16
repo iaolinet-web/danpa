@@ -33,7 +33,21 @@ export default function UsuariosAdmin() {
   const [busqueda, setBusqueda] = useState('')
   const [filtroPerfil, setFiltroPerfil] = useState('todos')
 
-  useEffect(() => { fetchUsuarios() }, [])
+  useEffect(() => {
+    let cancelled = false
+    const load = async () => {
+      const { data } = await supabase
+        .from('usuarios')
+        .select('*')
+        .order('created_at', { ascending: false })
+      if (!cancelled) {
+        setUsuarios(data || [])
+        setLoading(false)
+      }
+    }
+    load()
+    return () => { cancelled = true }
+  }, [])
 
   const fetchUsuarios = async () => {
     const { data } = await supabase
@@ -63,11 +77,15 @@ export default function UsuariosAdmin() {
   }))
 
   const handleGuardar = async (id) => {
-    const updates = { perfil: formEdit.perfil }
-    if (formEdit.nombre !== undefined) updates.nombre = formEdit.nombre
-    await supabase.from('usuarios').update(updates).eq('id', id)
-    setEditando(null)
-    await fetchUsuarios()
+    try {
+      const updates = { perfil: formEdit.perfil }
+      if (formEdit.nombre !== undefined) updates.nombre = formEdit.nombre
+      await supabase.from('usuarios').update(updates).eq('id', id)
+      setEditando(null)
+      await fetchUsuarios()
+    } catch (err) {
+      alert('Error al guardar usuario: ' + err.message)
+    }
   }
 
   const toggleActivo = async (id, activo, email) => {
@@ -77,8 +95,12 @@ export default function UsuariosAdmin() {
     }
     const accion = activo ? 'desactivar' : 'activar'
     if (!confirm(`¿Estás seguro de ${accion} al usuario ${email}?`)) return
-    await supabase.from('usuarios').update({ activo: !activo }).eq('id', id)
-    await fetchUsuarios()
+    try {
+      await supabase.from('usuarios').update({ activo: !activo }).eq('id', id)
+      await fetchUsuarios()
+    } catch (err) {
+      alert('Error al cambiar estado: ' + err.message)
+    }
   }
 
   const handleCrear = async (e) => {

@@ -30,12 +30,12 @@ export default function Login() {
     setError('')
     setMensaje('')
 
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: window.location.origin,
     })
 
-    if (error) {
-      setError(error.message)
+    if (resetError) {
+      setError(resetError.message)
     } else {
       setMensaje('Te enviamos un enlace para restablecer tu contraseña')
     }

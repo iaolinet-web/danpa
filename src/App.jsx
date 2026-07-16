@@ -37,15 +37,15 @@ export default function App() {
 
   return (
     <ThemeProvider>
-      {loading ? (
-        <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--bg)' }}>
-          <div className="animate-spin rounded-full h-10 w-10 border-2" style={{ borderColor: 'var(--surface-2)', borderTopColor: 'var(--brand)' }} />
-        </div>
-      ) : !user ? (
-        <Login />
-      ) : (
-        <ProfileProvider>
-          <BrowserRouter>
+      <BrowserRouter>
+        {loading ? (
+          <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--bg)' }}>
+            <div className="animate-spin rounded-full h-10 w-10 border-2" style={{ borderColor: 'var(--surface-2)', borderTopColor: 'var(--brand)' }} />
+          </div>
+        ) : !user ? (
+          <Login />
+        ) : (
+          <ProfileProvider>
             <CartProvider>
               <div className="min-h-screen" style={{ background: 'var(--bg)', color: 'var(--ink-primary)' }}>
                 <Navbar />
@@ -84,9 +84,9 @@ export default function App() {
                 </main>
               </div>
             </CartProvider>
-          </BrowserRouter>
-        </ProfileProvider>
-      )}
+          </ProfileProvider>
+        )}
+      </BrowserRouter>
     </ThemeProvider>
   )
 }

@@ -66,7 +66,37 @@ export default function Recorrida() {
   const [filtro, setFiltro] = useState('todos')
 
   useEffect(() => {
-    fetchData()
+    let cancelled = false
+    const load = async () => {
+      setLoading(true)
+      try {
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user || cancelled) { setLoading(false); return }
+
+        const { data: cli } = await supabase
+          .from('clientes')
+          .select('*')
+          .eq('corredor_id', user.id)
+          .eq('activo', true)
+          .order('nombre')
+
+        const { data: vis } = await supabase
+          .from('visitas')
+          .select('*, clientes(nombre)')
+          .eq('corredor_id', user.id)
+          .eq('fecha', fecha)
+
+        if (!cancelled) {
+          setClientes(cli || [])
+          setVisitas(vis || [])
+          setLoading(false)
+        }
+      } catch {
+        if (!cancelled) setLoading(false)
+      }
+    }
+    load()
+    return () => { cancelled = true }
   }, [fecha])
 
   const fetchData = async () => {
@@ -106,35 +136,39 @@ export default function Recorrida() {
   }
 
   const toggleVisita = async (clienteId) => {
-    const { data: { user } } = await supabase.auth.getUser()
-    const estado = getEstado(clienteId)
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      const estado = getEstado(clienteId)
 
-    if (!estado) {
-      await supabase.from('visitas').insert({
-        corredor_id: user.id,
-        cliente_id: clienteId,
-        fecha,
-        estado: 'Completada',
-        latitud: null,
-        longitud: null,
-      })
-    } else if (estado === 'Completada') {
-      await supabase
-        .from('visitas')
-        .update({ estado: 'Saltada' })
-        .eq('corredor_id', user.id)
-        .eq('cliente_id', clienteId)
-        .eq('fecha', fecha)
-    } else {
-      await supabase
-        .from('visitas')
-        .delete()
-        .eq('corredor_id', user.id)
-        .eq('cliente_id', clienteId)
-        .eq('fecha', fecha)
+      if (!estado) {
+        await supabase.from('visitas').insert({
+          corredor_id: user.id,
+          cliente_id: clienteId,
+          fecha,
+          estado: 'Completada',
+          latitud: null,
+          longitud: null,
+        })
+      } else if (estado === 'Completada') {
+        await supabase
+          .from('visitas')
+          .update({ estado: 'Saltada' })
+          .eq('corredor_id', user.id)
+          .eq('cliente_id', clienteId)
+          .eq('fecha', fecha)
+      } else {
+        await supabase
+          .from('visitas')
+          .delete()
+          .eq('corredor_id', user.id)
+          .eq('cliente_id', clienteId)
+          .eq('fecha', fecha)
+      }
+
+      await fetchData()
+    } catch (err) {
+      alert('Error al actualizar visita: ' + err.message)
     }
-
-    await fetchData()
   }
 
   const clientesConUbicacion = clientes.filter(c => c.latitud && c.longitud)

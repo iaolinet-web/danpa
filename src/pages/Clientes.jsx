@@ -32,43 +32,47 @@ export default function Clientes() {
   }, [])
 
   const fetchClientes = async () => {
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
 
-    const { data } = await supabase
-      .from('clientes')
-      .select('*')
-      .eq('corredor_id', user.id)
-      .eq('activo', true)
-      .order('nombre')
-
-    setClientes(data || [])
-
-    if (data && data.length > 0) {
-      const clienteIds = data.map(c => c.id)
-      const { data: pedidos } = await supabase
-        .from('pedidos')
-        .select('id, cliente_id, total, created_at, estado')
-        .in('cliente_id', clienteIds)
+      const { data } = await supabase
+        .from('clientes')
+        .select('*')
         .eq('corredor_id', user.id)
-        .order('created_at', { ascending: false })
+        .eq('activo', true)
+        .order('nombre')
 
-      const map = {}
-      pedidos?.forEach(p => {
-        if (!map[p.cliente_id]) {
-          map[p.cliente_id] = { total: 0, montoTotal: 0, ultimoPedido: null, pedidos: [] }
-        }
-        map[p.cliente_id].total++
-        map[p.cliente_id].montoTotal += p.total || 0
-        map[p.cliente_id].pedidos.push(p)
-        if (!map[p.cliente_id].ultimoPedido) {
-          map[p.cliente_id].ultimoPedido = p.created_at
-        }
-      })
-      setPedidosMap(map)
+      setClientes(data || [])
+
+      if (data && data.length > 0) {
+        const clienteIds = data.map(c => c.id)
+        const { data: pedidos } = await supabase
+          .from('pedidos')
+          .select('id, cliente_id, total, created_at, estado')
+          .in('cliente_id', clienteIds)
+          .eq('corredor_id', user.id)
+          .order('created_at', { ascending: false })
+
+        const map = {}
+        pedidos?.forEach(p => {
+          if (!map[p.cliente_id]) {
+            map[p.cliente_id] = { total: 0, montoTotal: 0, ultimoPedido: null, pedidos: [] }
+          }
+          map[p.cliente_id].total++
+          map[p.cliente_id].montoTotal += p.total || 0
+          map[p.cliente_id].pedidos.push(p)
+          if (!map[p.cliente_id].ultimoPedido) {
+            map[p.cliente_id].ultimoPedido = p.created_at
+          }
+        })
+        setPedidosMap(map)
+      }
+    } catch (err) {
+      console.error('Error fetching clientes:', err.message)
+    } finally {
+      setLoading(false)
     }
-
-    setLoading(false)
   }
 
   const resetForm = () => {
@@ -132,8 +136,12 @@ export default function Clientes() {
       ? `¿Desactivar este cliente?\n\nTiene ${info.total} pedido(s) por $${info.montoTotal.toFixed(2)}.\nSe archivará pero no se eliminará.`
       : '¿Desactivar este cliente?\n\nSe archivará pero no se eliminará.'
     if (!confirm(msg)) return
-    await supabase.from('clientes').update({ activo: false }).eq('id', id)
-    await fetchClientes()
+    try {
+      await supabase.from('clientes').update({ activo: false }).eq('id', id)
+      await fetchClientes()
+    } catch (err) {
+      alert('Error al archivar cliente: ' + err.message)
+    }
   }
 
   const handleWhatsApp = (e, telefono) => {
@@ -199,7 +207,7 @@ export default function Clientes() {
   }
 
   const getTipoBadge = (tipo) => {
-    const t = TIPOS_CLIENTE.find(t => t.value === tipo) || TIPOS_CLIENTE[0]
+    const t = TIPOS_CLIENTE.find(tc => tc.value === tipo) || TIPOS_CLIENTE[0]
     return (
       <span
         className="px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wider"

@@ -32,17 +32,22 @@ export default function CobrosAdmin() {
   const [editando, setEditando] = useState(null)
   const [formPago, setFormPago] = useState({ monto_pagado: '', tipo_pago: 'efectivo', referencia_pago: '', fecha_pago: new Date().toLocaleDateString('en-CA') })
 
-  useEffect(() => { fetchPedidos() }, [])
-
-  const fetchPedidos = async () => {
-    const { data } = await supabase
-      .from('pedidos')
-      .select('*, clientes(nombre, telefono)')
-      .eq('estado', 'Entregado')
-      .order('created_at', { ascending: false })
-    setPedidos(data || [])
-    setLoading(false)
-  }
+  useEffect(() => {
+    let cancelled = false
+    const load = async () => {
+      const { data } = await supabase
+        .from('pedidos')
+        .select('*, clientes(nombre, telefono)')
+        .eq('estado', 'Entregado')
+        .order('created_at', { ascending: false })
+      if (!cancelled) {
+        setPedidos(data || [])
+        setLoading(false)
+      }
+    }
+    load()
+    return () => { cancelled = true }
+  }, [])
 
   const fmt = (n) => '$' + (n || 0).toFixed(2)
 

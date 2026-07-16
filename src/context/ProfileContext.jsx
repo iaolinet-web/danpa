@@ -89,11 +89,12 @@ export function ProfileProvider({ children }) {
   }
 
   useEffect(() => {
+    let cancelled = false
     const init = async () => {
       const { data: { session } } = await supabase.auth.getSession()
-      if (session?.user) {
+      if (!cancelled && session?.user) {
         await fetchProfile(session.user.id)
-      } else {
+      } else if (!cancelled) {
         setLoading(false)
       }
     }
@@ -108,7 +109,7 @@ export function ProfileProvider({ children }) {
       }
     })
 
-    return () => subscription.unsubscribe()
+    return () => { cancelled = true; subscription.unsubscribe() }
   }, [])
 
   const hasPermission = (perm) => {
